@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 export default function Footerr(){
     return(
 <footer class="bg-white rounded-lg shadow dark:bg-gray-900 m-4">
@@ -8,16 +10,13 @@ export default function Footerr(){
             </a>
             <ul class="flex flex-wrap items-center mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400">
                 <li>
-                    <a href="#" class="hover:underline me-4 md:me-6">About</a>
+                    <Link to = '../home' class="hover:underline me-4 md:me-6">Home</Link>
                 </li>
                 <li>
-                    <a href="#" class="hover:underline me-4 md:me-6">Privacy Policy</a>
+                    <Link to = '../user' class="hover:underline me-4 md:me-6">Details</Link>
                 </li>
                 <li>
-                    <a href="#" class="hover:underline me-4 md:me-6">Licensing</a>
-                </li>
-                <li>
-                    <a href="#" class="hover:underline">Contact</a>
+                    <Link to = '../signup' class="hover:underline me-4 md:me-6">Logout</Link>
                 </li>
             </ul>
         </div>

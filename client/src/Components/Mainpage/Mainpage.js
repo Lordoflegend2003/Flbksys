@@ -14,10 +14,16 @@
     const [filteredFlights, setFilteredFlights] = useState([]);
     const [flights, setFlights] = useState([]);
     const [id , setId] =  useState('');
+
+    const [userName, setUserName] = useState('');
+  const [tickets, setTickets] = useState(0);
+
+  const flightdata = process.env.REACT_APP_FLIGHT_DATA;
+
     useEffect(() => {
       const fetchData = async () => {
         try {
-          const response = await axios.get('http://localhost:3001/api/flights');
+          const response = await axios.get(flightdata);
           setFlights(response.data);
           console.log(response.data);
         } catch (error) {
@@ -29,17 +35,33 @@
     }, []);
     
 
+  // const date = new Date(selectedTime);
+  // const day = date.getDate().toString().padStart(2, '0');
+  // const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  // const year = date.getFullYear();
+  // const  = `${day}/${month}/${year}`;
 
 
-    const handleSeatReservation = (id, availableSeats) => {
+    const handleSeatReservation = async (id, availableSeats) => {
       const seatsToBook = prompt(`Enter seats to book (up to ${availableSeats}):`, '1');
       if (seatsToBook !== null && !isNaN(seatsToBook)) {
         const seats = parseInt(seatsToBook);
         const updatedFlights = flights.map((flight) =>
           flight.id === id ? { ...flight, seats: Math.max(0, Math.min(flight.seats - seats, availableSeats)) } : flight
         );
-        setFlights(updatedFlights);
-        alert(`Successfully booked ${seats} seat(s) for Flight ID ${id}`);
+        setFlights(updatedFlights)  
+        try {
+          const bookSeats = process.env.REACT_APP_BOOK_SEATS;
+          const response = await axios.post(bookSeats, {
+            flightId: id,
+            bookedSeats: seats
+          });
+          console.log('Seats booked successfully:', response.data);
+          // You may perform additional actions upon successful booking
+        } catch (error) {
+          console.error('Error booking seats:', error);
+          // Handle booking error
+        }
       }
     };
 
@@ -76,6 +98,24 @@
 
     const handleFlightNumberChange = (e) => {
       setFlightNumber(e.target.value);
+    };
+
+    const handleModalSubmit = async () => {
+      try {
+        // Make an API call to store data in the database
+        const bookingsData = process.env.REACT_APP_BOOKING_NEW;
+        const response = await axios.post(bookingsData, {
+          flightNumber: flightNumber,
+          userName: userName,
+          tickets: tickets,
+        });
+  
+        console.log('Data stored successfully:', response.data);
+        // You may perform additional actions upon successful data storage
+      } catch (error) {
+        console.error('Error storing data:', error);
+        // Handle error while storing data
+      }
     };
 
     const renderSearchBar = () => {
