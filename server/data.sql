@@ -13,7 +13,6 @@ CREATE TABLE tickets (
 );
 
 
-
 CREATE TABLE user_tickets (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
@@ -38,4 +37,13 @@ CREATE TABLE users (
     password VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+
+CREATE TABLE ADMIN (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
     
