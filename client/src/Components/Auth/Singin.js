@@ -1,11 +1,11 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../Context/AuthContext";
+import { AuthContext } from "../../Context/AuthContext";
 
 export default function Singin() {
-  const { authuser, setAuthuser, isLoggedIn, setIsloggedin } = useAuth();
+  const { login, logout, user, isloggedin } = useContext(AuthContext);
 
   const navigation = useNavigate();
 
@@ -15,6 +15,8 @@ export default function Singin() {
   const handleLogin = async () => {
     const loginauth = process.env.REACT_APP_LOGIN;
 
+    const usercurdata = { email, password };
+
     try {
       const response = await axios.post(loginauth, {
         email: email,
@@ -23,8 +25,7 @@ export default function Singin() {
 
       if (response && response.data) {
         console.log("Login successful:", response.data);
-        setIsloggedin(true);
-        setAuthuser(email);
+        login({ userdata: usercurdata });
         navigation("/home");
       } else {
         console.error("Login failed: No data in response");

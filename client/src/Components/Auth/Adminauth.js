@@ -1,14 +1,13 @@
 import axios from "axios";
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../Context/AuthContext";
+import { AuthContext } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Adminauth() {
   const navigation = useNavigate();
 
-  const { authuser, setAuthuser, isLoggedIn, setIsloggedin } = useAuth();
-
+  const { login, logout, isLoggedIn } = useContext(AuthContext);
 
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -22,6 +21,12 @@ export default function Adminauth() {
     try {
       console.log(email, password, username);
 
+      const userdata = {
+        email,
+        password,
+        username,
+      };
+
       const response = await axios.post(registerauth, {
         username: username,
         email: email,
@@ -30,8 +35,7 @@ export default function Adminauth() {
 
       if (response && response.data) {
         console.log("Admin registered successfully:", response.data);
-        setIsloggedin(true);
-        setAuthuser(username);
+        login({ userdata });
         navigation("/admin");
       }
     } catch (error) {

@@ -62,46 +62,88 @@ app.post("/api/flights", async (req, res) => {
   }
 });
 
-app.get("/api/flights-tickets/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const sql = "SELECT * FROM user_tickets WHERE id = $1";
-    const result = await pool.query(sql, [id]);
+app.get("/api/userdetails/:email", async (req, res) => {
+  const { email } = req.params;
+  const sql = "SELECT * FROM users WHERE email = $1";
+  const result = await pool.query(sql, [email]);
+  if (result.rows.length > 0) {
     res.json(result.rows[0]);
+  } else {
+    res.status(500).send("User not Details found");
+  }
+});
+
+app.get("/api/flights-tickets/:emaill", async (req, res) => {
+  try {
+    const { emaill } = req.params;
+    const sql = "SELECT * FROM user_tickets WHERE useremail = $1";
+    const result = await pool.query(sql, [emaill]);
+    res.json(result.rows);
   } catch (err) {
     res.status(500).send("Error occurred while getting flight.");
   }
 });
 
 app.post("/api/book-seats", async (req, res) => {
-  const { flightId, bookedSeats } = req.body;
+  const {
+    useremail,
+    flightID,
+    flightNumber,
+    bookedSeats,
+    destination,
+    arrival,
+    date,
+    time,
+  } = req.body;
+
+  console.log(flightID, flightNumber);
 
   try {
     // Fetch the flight from the database
-    const flight = await pool.query("SELECT * FROM flights WHERE id = $1", [
-      flightId,
-    ]);
 
-    if (flight.rows.length === 0) {
-      return res.status(404).json({ message: "Flight not found" });
-    }
+    const isavailable = await pool.query(
+      "SELECT seats FROM flights WHERE id = $1",
+      [flightID]
+    );
 
-    const currentSeats = flight.rows[0].seats;
-    const availableSeats = currentSeats - bookedSeats;
-
-    if (availableSeats < 0) {
+    if (isavailable === 0) {
       return res.status(400).json({ message: "Not enough seats available" });
     }
 
-    // Update the seats in the database
-    await pool.query("UPDATE flights SET seats = $1 WHERE id = $2", [
-      availableSeats,
-      flightId,
-    ]);
+    const query =
+      "INSERT INTO user_tickets (useremail , flightID , flightNumber , bookedSeats , destination , arrival , date , time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
+    const values = [
+      useremail,
+      flightID,
+      flightNumber,
+      bookedSeats,
+      destination,
+      arrival,
+      date,
+      time,
+    ];
 
-    return res.status(200).json({ message: "Seats booked successfully" });
+    const flight = await pool.query(query, values);
+    if (flight.rows.length > 0) {
+      return res.status(200).json({ message: "Seats booked successfully" });
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+
+    const availableseats = isavailable - bookedSeats;
+
+    const updateSeats = await pool.query(
+      "UPDATE flights SET seats = $1 WHERE id = $2",
+      [availableseats, flightID]
+    );
+
+    if (updateSeats.rows.length > 0) {
+      return res.status(200).json({ message: "Seats Updated  successfully" });
+    } else {
+      return res.status(500).json({ message: "Internal server error" });
+    }
   } catch (error) {
-    console.error("Error booking seats:", error);
+    console.error("Error booking seatsss:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 });
@@ -152,23 +194,25 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-app.delete("/api/flights/:id", async (req, res) => {
+app.delete("/api/flights/:email", async (req, res) => {
   try {
-    const { id } = req.params;
-    const sql = "DELETE FROM flights WHERE id = $1";
-    await pool.query(sql, [id]);
+    const { email } = req.params;
+    const sql = "DELETE FROM flights WHERE email = $1";
+    await pool.query(sql, [email]);
     res.status(200).send(`Flight with ID ${id} deleted successfully.`);
   } catch (err) {
     res.status(500).send("Error occurred while deleting flight.");
   }
 });
 
-app.delete("/api/flights-tickets", async (req, res) => {
+app.delete("/api/:emaill/:flightNumber", async (req, res) => {
   try {
-    const { id } = req.params;
-    const sql = "Delete from user_tickets where id = $1";
-    const response = await pool.query(sql, [id]);
-    res.send(response).status(200);
+    const { emaill, flightNumber } = req.params;
+    console.log(emaill, flightNumber);
+    const sql =
+      "Delete from user_tickets where useremail = $1 AND flightnumber = $2";
+    const response = await pool.query(sql, [emaill, flightNumber]);
+    res.sendStatus(200);
   } catch (err) {
     res.send(err).status(500);
   }
@@ -191,7 +235,6 @@ app.post("/api/adminauth", async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 app.listen(Port, () => {
   console.log("Server is running on port 3001");

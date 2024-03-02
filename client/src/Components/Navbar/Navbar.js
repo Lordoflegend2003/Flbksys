@@ -1,18 +1,23 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../Context/AuthContext";
+// import { useAuth } from "../../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../../Context/AuthContext";
 
 export default function Navbarr() {
-  const navigate = useNavigate(); // Change the variable name to navigate
+  const navigate = useNavigate();
 
-  const { authuser, setAuthuser, isLoggedIn, setIsloggedin } = useAuth();
+  // Change the variable name to navigate
 
-  const handleLogout = (e) => {
-    e.preventDefault();
-    setIsloggedin(false);
-    setAuthuser(null);
-    navigate("/"); // Use navigate instead of navigator
+  const { login, logout, isLoggedIn } = useContext(AuthContext);
+
+  const user = JSON.parse(localStorage.getItem("user")) || [];
+  const tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+
+  const handleLogout = () => {
+    navigate("/");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tickets");
   };
 
   return (

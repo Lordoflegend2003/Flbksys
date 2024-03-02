@@ -1,19 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import Navbar from "../Navbar/Navbar";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 import "./mainpage.css";
-import { useAuth } from "../../Context/AuthContext";
+import { AuthContext } from "../../Context/AuthContext";
 import Footerr from "../Footer.js/Footerr";
 import img from "../../mark-olsen-K5j1KgecVC8-unsplash.jpg";
 
 const MyComponent = () => {
+  const navigate = useNavigate();
 
-  const { authuser, setAuthuser, isLoggedIn, setIsloggedin } = useAuth();
+  const { isLoggedIn, login, logout, user } = useContext(AuthContext);
 
+  const curuser = JSON.parse(localStorage.getItem("user")) || {};
+
+  const curusermail = curuser.email;
 
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [setSeats, setSelectedSeats] = useState("");
+  // const [setSeats, setSelectedSeats] = useState("");
   const [departure, setDeparture] = useState("");
   const [destination, setDestination] = useState("");
   const [flightNumber, setFlightNumber] = useState("");
@@ -26,10 +31,23 @@ const MyComponent = () => {
 
   const flightdata = process.env.REACT_APP_FLIGHT_DATA;
 
+  const finduser = process.env.REACT_APP_TICKETS;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await axios.get(flightdata);
+
+        const response2 = await axios.get(
+          `${finduser}/userdetails/${curusermail}`
+        );
+
+        // console.log(response2.data.username);
+
+        setUserName(response2.data.username);
+
+        console.log(userName);
+
         setFlights(response.data);
         console.log(response.data);
       } catch (error) {
@@ -46,38 +64,8 @@ const MyComponent = () => {
   // const year = date.getFullYear();
   // const  = `${day}/${month}/${year}`;
 
-  const handleSeatReservation = async (id, availableSeats) => {
-    const seatsToBook = prompt(
-      `Enter seats to book (up to ${availableSeats}):`,
-      "1"
-    );
-    if (seatsToBook !== null && !isNaN(seatsToBook)) {
-      const seats = parseInt(seatsToBook);
-      const updatedFlights = flights.map((flight) =>
-        flight.id === id
-          ? {
-              ...flight,
-              seats: Math.max(
-                0,
-                Math.min(flight.seats - seats, availableSeats)
-              ),
-            }
-          : flight
-      );
-      setFlights(updatedFlights);
-      try {
-        const bookSeats = process.env.REACT_APP_BOOK_SEATS;
-        const response = await axios.post(bookSeats, {
-          flightId: id,
-          bookedSeats: seats,
-        });
-        console.log("Seats booked successfully:", response.data);
-        // You may perform additional actions upon successful booking
-      } catch (error) {
-        console.error("Error booking seats:", error);
-        // Handle booking error
-      }
-    }
+  const handleSeatReservation = (flights) => {
+    navigate("../booktickets", { state: { flights } });
   };
 
   useEffect(() => {
@@ -86,7 +74,7 @@ const MyComponent = () => {
       const timeMatch = selectedTime ? flight.time === selectedTime : true;
       const dateMatch = selectedDate ? flight.date === selectedDate : true;
       const departureMatch = departure
-        ? flight.departure.toLowerCase().includes(departure.toLowerCase())
+        ? flight.departure.includes(departure.toLowerCase())
         : true;
       const destinationMatch = destination
         ? flight.destination.toLowerCase().includes(destination.toLowerCase())
@@ -152,7 +140,7 @@ const MyComponent = () => {
   };
 
   const renderSearchBar = () => {
-    return  (
+    return (
       <div className="flex justify-evenly mb-4 mt-7 mr-5 ml-5 ">
         <input
           type="text"
@@ -179,7 +167,7 @@ const MyComponent = () => {
           type="date"
           value={selectedDate}
           onChange={handleDateChange}
-          min={new Date().toISOString().split("T")[0]} // Set the min attribute to today's date
+          min={new Date().toISOString().split("T")[0]}
           className="p-2 border border-gray-300 rounded-lg"
         />
 
@@ -191,114 +179,114 @@ const MyComponent = () => {
             new Date()
               .toLocaleTimeString("en-US", { hour12: false })
               .split(":")[0] + ":00"
-          } // Set the min attribute to the current hour in 24-hour format
+          }
           className="p-2 border border-gray-300 rounded-lg"
         />
       </div>
     );
   };
 
-    return  isLoggedIn ? (
-      <div className="h-100vh">
-        <Navbar />
-        <div styles={{ backgroundImage: `url(${img})` }}>
-          <h1 className="text-center text-2xl py-5">Welcome to Airways India</h1>
-          <h5 className="text-center text-2xl py-5">Filter Flights</h5>
-          {/* <img src={img} alt="" className="w-full h-20 z-" /> */}
-        </div>
-        {renderSearchBar()}
-        <h5 className="text-center text-2xl py-5">Current Flights</h5>
-        <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-          <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-              <tr>
-                <th scope="col" className="p-4">
+  return isLoggedIn ? (
+    <div className="h-100vh">
+      <Navbar />
+      <div styles={{ backgroundImage: `url(${img})` }}>
+        <h1 className="text-center text-2xl py-5">
+          Welcome to Airways India {userName} !!
+        </h1>
+        <h5 className="text-center text-2xl py-5">Filter Flights</h5>
+        {/* <img src={img} alt="" className="w-full h-20 z-" /> */}
+      </div>
+      {renderSearchBar()}
+      <h5 className="text-center text-2xl py-5">Current Flights</h5>
+      <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
+        <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th scope="col" className="p-4">
+                <div className="flex items-center">
+                  <input
+                    id="checkbox-all-search"
+                    type="checkbox"
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  />
+                  <label htmlFor="checkbox-all-search" className="sr-only">
+                    Checkbox
+                  </label>
+                </div>
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Departure
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Destination
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Flight Number
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Date
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Time
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Seats
+              </th>
+              <th scope="col" className="px-6 py-3">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Mapping filtered flights data */}
+            {filteredFlights.map((flight) => (
+              <tr
+                key={flight.id}
+                className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+              >
+                {/* Flight details */}
+                <td className="w-4 p-4">
                   <div className="flex items-center">
                     <input
-                      id="checkbox-all-search"
+                      id={`checkbox-table-search-${flight.id}`}
                       type="checkbox"
                       className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                     />
-                    <label htmlFor="checkbox-all-search" className="sr-only">
+                    <label
+                      htmlFor={`checkbox-table-search-${flight.id}`}
+                      className="sr-only"
+                    >
                       Checkbox
                     </label>
                   </div>
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Departure
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Destination
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Flight Number
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Date
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Time
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Seats
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Action
-                </th>
+                </td>
+                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                  {flight.departure}
+                </td>
+                <td className="px-6 py-4">{flight.destination}</td>
+                <td className="px-6 py-4">{flight.flight_number}</td>
+                <td className="px-6 py-4">{flight.date}</td>
+                <td className="px-6 py-4">{flight.time}</td>
+                <td className="px-6 py-4">{flight.seats}</td>
+                {/* Button to book a seat */}
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleSeatReservation(flight)}
+                    className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
+                  >
+                    Book Seat
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {/* Mapping filtered flights data */}
-              {filteredFlights.map((flight) => (
-                <tr
-                  key={flight.id}
-                  className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                >
-                  {/* Flight details */}
-                  <td className="w-4 p-4">
-                    <div className="flex items-center">
-                      <input
-                        id={`checkbox-table-search-${flight.id}`}
-                        type="checkbox"
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 dark:focus:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                      />
-                      <label
-                        htmlFor={`checkbox-table-search-${flight.id}`}
-                        className="sr-only"
-                      >
-                        Checkbox
-                      </label>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                    {flight.departure}
-                  </td>
-                  <td className="px-6 py-4">{flight.destination}</td>
-                  <td className="px-6 py-4">{flight.flight_number}</td>
-                  <td className="px-6 py-4">{flight.date}</td>
-                  <td className="px-6 py-4">{flight.time}</td>
-                  <td className="px-6 py-4">{flight.seats}</td>
-                  {/* Button to book a seat */}
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() =>
-                        handleSeatReservation(flight.id, flight.seats)
-                      }
-                      className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                    >
-                      Book Seat
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Footerr />
+            ))}
+          </tbody>
+        </table>
       </div>
-    ) : (
-      navigator("/")
-    ); 
+      <Footerr />
+    </div>
+  ) : (
+    navigate("/")
+  );
 };
 
 export default MyComponent;
