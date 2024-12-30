@@ -15,12 +15,9 @@ const pool = new Pool({
   port: process.env.DB_PORT,
 });
 
-app.use(bodyParser.json());
-app.use(
-  cors({
-    origin: process.env.FRONTEND_ORIGIN,
-  })
-);
+app.use(cors());
+
+app.use(express.json());
 
 app.get("/api/flights", async (req, res) => {
   try {
